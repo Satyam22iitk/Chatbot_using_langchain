@@ -1,64 +1,40 @@
+import utils
 import streamlit as st
-from utils import enable_chat_history, display_msg, configure_llm, execute_with_retry
 from streaming import StreamHandler
+from deepseek_integration import DeepSeekLLM
+
 from langchain.chains import ConversationChain
-from langchain.memory import ConversationBufferMemory
-from langchain.prompts import PromptTemplate
+
+st.set_page_config(page_title="Chatbot", page_icon="💬")
+st.header('Basic Chatbot')
+st.write('Allows users to interact with the LLM')
 
 class BasicChatbot:
 
+    def __init__(self):
+        utils.sync_st_session()
+        self.llm = utils.configure_llm()
+    
+    def setup_chain(self):
+        chain = ConversationChain(llm=self.llm, verbose=False)
+        return chain
+    
+    @utils.enable_chat_history
     def main(self):
-        st.header('Basic Chatbot')
-        enable_chat_history(self.main)
-
-        # Initialize LLM
-        llm = configure_llm()
-        
-        # Setup memory and chain
-        memory = ConversationBufferMemory()
-        prompt = PromptTemplate.from_template("""
-        You are a helpful AI assistant. Have a conversation with the human.
-
-        Current conversation:
-        {history}
-        Human: {input}
-        AI:""")
-        
-        chain = ConversationChain(
-            llm=llm,
-            memory=memory,
-            prompt=prompt,
-            verbose=True
-        )
-
-        if prompt := st.chat_input(placeholder='Ask me anything!'):
-            display_msg(prompt, 'user')
-            
-            with st.chat_message('assistant'):
+        chain = self.setup_chain()
+        user_query = st.chat_input(placeholder="Ask me anything!")
+        if user_query:
+            utils.display_msg(user_query, 'user')
+            with st.chat_message("assistant"):
                 st_cb = StreamHandler(st.empty())
-                
-                try:
-                    # Use retry wrapper for the API call
-                    result = execute_with_retry(
-                        chain.invoke,
-                        max_retries=3,
-                        input={"input": prompt},
-                        config={'callbacks': [st_cb]}
-                    )
-                    
-                    # Display final response
-                    response = result['response']
-                    st.session_state.messages.append({"role": "assistant", "content": response})
-                    
-                except APIStatusError as e:
-                    st.error("DeepSeek API is currently unavailable. Please try again later.")
-                    st.info("This could be due to server maintenance or high traffic.")
-                except APIConnectionError as e:
-                    st.error("Connection to DeepSeek API failed. Please check your internet connection.")
-                except RateLimitError as e:
-                    st.error("Rate limit exceeded. Please wait a moment before trying again.")
-                except Exception as e:
-                    st.error(f"An unexpected error occurred: {str(e)}")
+                result = chain.invoke(
+                    {"input":user_query},
+                    {"callbacks": [st_cb]}
+                )
+                response = result["response"]
+                st.session_state.messages.append({"role": "assistant", "content": response})
+                utils.print_qa(BasicChatbot, user_query, response)
 
-obj = BasicChatbot()
-obj.main()
+if __name__ == "__main__":
+    obj = BasicChatbot()
+    obj.main()

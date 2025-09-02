@@ -2,6 +2,7 @@ import os
 import utils
 import streamlit as st
 from streaming import StreamHandler
+from deepseek_integration import DeepSeekLLM
 
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain

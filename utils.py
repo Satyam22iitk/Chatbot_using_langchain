@@ -1,11 +1,10 @@
-
 import os
 import streamlit as st
 from datetime import datetime
 from streamlit.logger import get_logger
 from langchain_community.chat_models import ChatOllama
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
-from deepseek import DeepSeek  # Add this import
+from deepseek import DeepSeek
 
 logger = get_logger('Langchain-Chatbot')
 

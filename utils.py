@@ -4,31 +4,19 @@ import streamlit as st
 from datetime import datetime
 from streamlit.logger import get_logger
 from langchain_openai import ChatOpenAI
-from langchain_community.chat_models import ChatOllama
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 
 logger = get_logger('Langchain-Chatbot')
 
-# Add DeepSeek configuration at the top
+# DeepSeek Configuration
 DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1"
 DEEPSEEK_MODELS = ["deepseek-chat", "deepseek-coder", "deepseek-llm"]
 
-def get_llm_client(api_key, provider="openai"):
-    """Get LLM client based on provider"""
-    if provider.lower() == "deepseek":
-        return openai.OpenAI(
-            api_key=api_key,
-            base_url=DEEPSEEK_BASE_URL
-        )
-    else:
-        return openai.OpenAI(api_key=api_key)
-
 #decorator
 def enable_chat_history(func):
-    # Check for any API key (OpenAI or DeepSeek)
-    if os.environ.get("OPENAI_API_KEY") or os.environ.get("DEEPSEEK_API_KEY"):
+    if os.environ.get("DEEPSEEK_API_KEY"):
 
-        # to clear chat history after swtching chatbot
+        # to clear chat history after switching chatbot
         current_page = func.__qualname__
         if "current_page" not in st.session_state:
             st.session_state["current_page"] = current_page
@@ -60,82 +48,57 @@ def display_msg(msg, author):
     st.session_state.messages.append({"role": author, "content": msg})
     st.chat_message(author).write(msg)
 
-def choose_custom_api_key():
-    """Choose between OpenAI and DeepSeek API keys"""
-    api_provider = st.sidebar.radio(
-        label="API Provider",
-        options=["OpenAI", "DeepSeek"],
-        key="SELECTED_API_PROVIDER"
+def choose_deepseek_key():
+    """Get DeepSeek API key from user"""
+    deepseek_api_key = st.sidebar.text_input(
+        label="DeepSeek API Key",
+        type="password",
+        placeholder="sk-...",
+        key="DEEPSEEK_API_KEY_INPUT"
     )
+    if not deepseek_api_key:
+        st.error("Please add your DeepSeek API key to continue.")
+        st.info("Obtain your key from: https://platform.deepseek.com/")
+        st.stop()
     
-    if api_provider == "OpenAI":
-        api_key = st.sidebar.text_input(
-            label="OpenAI API Key",
-            type="password",
-            placeholder="sk-...",
-            key="SELECTED_OPENAI_API_KEY"
-        )
-        if not api_key:
-            st.error("Please add your OpenAI API key to continue.")
-            st.info("Obtain your key from: https://platform.openai.com/account/api-keys")
-            st.stop()
-        return "openai", api_key, None
-        
-    else:  # DeepSeek
-        api_key = st.sidebar.text_input(
-            label="DeepSeek API Key",
-            type="password",
-            placeholder="sk-...",
-            key="SELECTED_DEEPSEEK_API_KEY"
-        )
-        if not api_key:
-            st.error("Please add your DeepSeek API key to continue.")
-            st.info("Obtain your key from: https://platform.deepseek.com/")
-            st.stop()
-        
-        # For DeepSeek, we can directly return the model since it's compatible
-        model = st.sidebar.selectbox(
-            label="DeepSeek Model",
-            options=DEEPSEEK_MODELS,
-            key="SELECTED_DEEPSEEK_MODEL"
-        )
-        return "deepseek", api_key, model
+    # Test the API key
+    try:
+        client = openai.OpenAI(api_key=deepseek_api_key, base_url=DEEPSEEK_BASE_URL)
+        client.models.list()  # Simple test call
+    except Exception as e:
+        st.error(f"Invalid DeepSeek API key: {str(e)}")
+        st.stop()
+    
+    return deepseek_api_key
 
 def configure_llm():
-    available_llms = ["gpt-4.1-mini", "llama3.2:3b", "use your api key", "deepseek-chat"]
-    llm_opt = st.sidebar.radio(
-        label="LLM",
-        options=available_llms,
-        key="SELECTED_LLM"
+    """Configure DeepSeek LLM only"""
+    available_models = DEEPSEEK_MODELS
+    
+    # Use secrets if available, otherwise get from user input
+    deepseek_api_key = st.secrets.get("DEEPSEEK_API_KEY")
+    
+    if not deepseek_api_key:
+        deepseek_api_key = choose_deepseek_key()
+    
+    # Model selection
+    selected_model = st.sidebar.selectbox(
+        label="DeepSeek Model",
+        options=available_models,
+        key="SELECTED_DEEPSEEK_MODEL",
+        index=0  # Default to deepseek-chat
     )
-
-    if llm_opt == "llama3.2:3b":
-        llm = ChatOllama(model="llama3.2", base_url=st.secrets["OLLAMA_ENDPOINT"])
-    elif llm_opt == "gpt-4.1-mini":
-        llm = ChatOpenAI(model_name=llm_opt, temperature=0, streaming=True, 
-                        api_key=st.secrets.get("OPENAI_API_KEY"))
-    elif llm_opt == "deepseek-chat":
-        # DeepSeek integration - uses same ChatOpenAI class with different parameters
-        llm = ChatOpenAI(
-            model_name="deepseek-chat",
-            temperature=0,
-            streaming=True,
-            api_key=st.secrets.get("DEEPSEEK_API_KEY"),
-            base_url=DEEPSEEK_BASE_URL
-        )
-    else:
-        provider, api_key, model = choose_custom_api_key()
-        if provider == "deepseek":
-            llm = ChatOpenAI(
-                model_name=model,
-                temperature=0,
-                streaming=True,
-                api_key=api_key,
-                base_url=DEEPSEEK_BASE_URL
-            )
-        else:
-            llm = ChatOpenAI(model_name="gpt-4.1-mini", temperature=0, 
-                           streaming=True, api_key=api_key)
+    
+    # Configure DeepSeek LLM using ChatOpenAI with custom base_url
+    llm = ChatOpenAI(
+        model_name=selected_model,
+        temperature=0,
+        streaming=True,
+        api_key=deepseek_api_key,
+        base_url=DEEPSEEK_BASE_URL,
+        max_retries=3
+    )
+    
     return llm
 
 def print_qa(cls, question, answer):
@@ -150,3 +113,9 @@ def configure_embedding_model():
 def sync_st_session():
     for k, v in st.session_state.items():
         st.session_state[k] = v
+
+# Initialize OpenAI client for direct API calls (if needed)
+def get_deepseek_client():
+    """Get DeepSeek client for direct API calls"""
+    api_key = st.secrets.get("DEEPSEEK_API_KEY") or os.environ.get("DEEPSEEK_API_KEY")
+    return openai.OpenAI(api_key=api_key, base_url=DEEPSEEK_BASE_URL)

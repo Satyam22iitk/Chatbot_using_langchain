@@ -9,7 +9,7 @@ Requests==2.32.3
 SQLAlchemy==2.0.36
 streamlit==1.41.1
 validators==0.34.0
-fastembed==0.4.2
+fastembed>=0.5.0
 pypdf==5.1.0
 duckduckgo_search==7.0.1
 pydantic==2.10.6

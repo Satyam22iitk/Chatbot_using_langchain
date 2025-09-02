@@ -1,51 +1,32 @@
+[file name]: Home.py
+[file content begin]
 import streamlit as st
 
-# --- Page Config ---
 st.set_page_config(
-    page_title="AI Chatbots with LangChain",
-    page_icon="🤖",
-    layout="wide"
+    page_title="Langchain Chatbot",
+    page_icon='💬',
+    layout='wide'
 )
 
-# --- Title Section ---
-st.markdown(
-    """
-    <style>
-        .title {
-            font-size:40px !important;
-            font-weight:700 !important;
-            color:#4CAF50;
-        }
-        .subtitle {
-            font-size:20px !important;
-            color:#555;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-st.markdown('<p class="title">🤖 AI Chatbots with LangChain</p>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">College Project | Built using Streamlit & LangChain 🚀</p>', unsafe_allow_html=True)
-
-st.write("---")
-
-# --- About Section ---
-st.info(
-    """
-    **LangChain** is a framework that makes it easier to build powerful applications using 
-    large language models (LLMs).  
-    This project demonstrates how different types of **chatbots** can be built with LangChain.
-    """
-)
-
-# --- Chatbot Examples ---
-st.subheader("📂 Available Chatbot Implementations")
-
-st.markdown("""
-- 💬 **Basic Chatbot** → Simple interactive conversations with an LLM.  
-- 🧠 **Context Aware Chatbot** → Remembers previous chats and responds with context.  
-- 📄 **Chat with Your Documents** → Upload PDFs or notes and ask questions.    
+st.header("Chatbot Implementations with Langchain & DeepSeek")
+st.write("""
+[![view source code ](https://img.shields.io/badge/GitHub%20Repository-gray?logo=github)](https://github.com/shashankdeshpande/langchain-chatbot)
+[![linkedin ](https://img.shields.io/badge/Shashank%20Deshpande-blue?logo=linkedin&color=gray)](https://www.linkedin.com/in/shashank-deshpande/)
+![Visitors](https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Flangchain-chatbot.streamlit.app&label=Visitors&labelColor=%235d5d5d&countColor=%231e7ebf&style=flat)
 """)
+st.write("""
+Langchain is a powerful framework designed to streamline the development of applications using Language Models (LLMs). It provides a comprehensive integration of various components, simplifying the process of assembling them to create robust applications.
 
-st.success("👉 Use the sidebar to navigate and try different chatbots!")
+This implementation uses DeepSeek's powerful language models to power the chatbots. DeepSeek provides state-of-the-art AI capabilities for natural language understanding and generation.
+
+Leveraging the power of Langchain and DeepSeek, the creation of chatbots becomes effortless. Here are a few examples of chatbot implementations catering to different use cases:
+
+- **Basic Chatbot**: Engage in interactive conversations with the DeepSeek LLM.
+- **Context aware chatbot**: A chatbot that remembers previous conversations and provides responses accordingly using DeepSeek's memory capabilities.
+- **Chat with your documents**: Empower the chatbot with the ability to access custom documents, enabling it to provide answers to user queries based on the referenced information using DeepSeek's RAG capabilities.
+
+To explore sample usage of each chatbot, please navigate to the corresponding chatbot section.
+
+**Note**: You'll need a DeepSeek API key to use these chatbots. You can obtain one from the [DeepSeek platform](https://platform.deepseek.com/).
+""")
+[file content end]

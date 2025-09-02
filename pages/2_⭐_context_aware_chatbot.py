@@ -1,6 +1,7 @@
 import utils
 import streamlit as st
 from streaming import StreamHandler
+from deepseek_integration import DeepSeekLLM
 
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationBufferMemory
